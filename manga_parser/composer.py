@@ -23,13 +23,13 @@ class Composer:
         cnc = CounterWithCallback(lasts_callback, self.delta_count) if lasts_callback else None
         async def load_pictures_(pictures):
             async with aiohttp.ClientSession() as session:
-                await asyncio.gather(*[asyncio.ensure_future(pic.load(session, cnc)) for pic in pictures])
+                for pic in pictures:
+                    await pic.load(session, cnc)
         while True:
             pics_to_load = [pic for pic in pics if not pic.loaded]
             if pics_to_load:
                 print(len(pics_to_load))
                 await load_pictures_(pics_to_load)
-                await asyncio.sleep(10)
             else:
                 break
 
