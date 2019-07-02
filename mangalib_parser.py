@@ -36,24 +36,39 @@ def load_chapter(slug, v, c):
         async with aiohttp.ClientSession() as session:
             while chapter.info:
                 await chapter.load__(session)
-    asyncio.new_event_loop().run_until_complete(load_one())
+    asyncio.get_event_loop().run_until_complete(load_one())
     return chapter
 
 class MangaLibBook:
     def __init__(self, slug):
         self.book_url = 'https://mangalib.me/' + slug
-        self.__load_chapters()
         self._info = None
+        self.id = None
+        self.__load_info()
+        self._chapters = []
+        self.lang = '🇷🇺'
 
     def __parse_chapter_info(self, chapter):
         chap = chapter.xpath('a')[0]
         return MangaLibChapter(chap.attrib['href'], chap.attrib['title'], chap.text.split('\n')[0])
 
-    def __load_chapters(self):
-        html = lxml.html.fromstring(requests.get(self.book_url).content)
-        self.id = html.xpath('//div[@id = "comments"]')[0].attrib['data-post-id']
-        self.chapters = [self.__parse_chapter_info(chapter) for chapter in html.xpath('//div[@class = "chapter-item__name"]')]
-        self.chapters.reverse()
+    def __load_info(self):
+        request = requests.get(self.book_url)
+        if (request.status_code == 200):
+            self.html = lxml.html.fromstring(request.content)
+            self.id = self.html.xpath('//div[@id = "comments"]')[0].attrib['data-post-id']
+            self.thumbnail = self.html.xpath('//img[@class = "manga__cover"]')[0].attrib['src']
+
+    @property
+    def chapters(self):
+        if not self._chapters:
+            self._chapters = [self.__parse_chapter_info(chapter) for chapter in self.html.xpath('//div[@class = "chapter-item__name"]')]
+            self._chapters.reverse()
+        return self._chapters
+     
+    @property
+    def loaded(self):
+        return True if self.id else False
 
     @property
     def info(self):
@@ -72,7 +87,7 @@ class MangaLibBook:
         async def load_unloaded_chapters(session):
             to_load = [asyncio.ensure_future(one.load__(session)) for one in self.chapters if not one.info]
             if lasts_callback:
-                lasts_callback(len(to_load))
+                await lasts_callback(len(to_load))
             if to_load:
                 await asyncio.gather(*to_load)
                 return True

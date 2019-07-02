@@ -10,10 +10,10 @@ class CounterWithCallback:
         self.callback = callback
         self.delta = delta
 
-    def plus(self):
+    async def plus(self):
         self.i += 1
         if not self.i % self.delta:
-            self.callback(self.i)
+            await self.callback(self.i)
 
 class Composer:
     def __init__(self, max_width=1024):
@@ -26,7 +26,7 @@ class Composer:
         async def fetch_pic(session, url, cnc):
             async with session.get(url) as resp:
                 if cnc:
-                    cnc.plus()
+                    await cnc.plus()
                 if resp.status == 200:
                     return self.create_pil(await resp.read())
                 else:
