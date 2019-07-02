@@ -27,9 +27,9 @@ class Composer:
         while True:
             pics_to_load = [pic for pic in pics if not pic.loaded]
             if pics_to_load:
+                print(len(pics_to_load))
                 await load_pictures_(pics_to_load)
-                # for i in range(len(pics_to_load) // self.pack_size):
-                #     await load_pictures_(pics_to_load[i*self.pack_size:None if (i+1)*self.pack_size > len(pics_to_load) else (i+1)*self.pack_size])
+                await asyncio.sleep(10)
             else:
                 break
 

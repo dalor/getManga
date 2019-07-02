@@ -1,5 +1,7 @@
 from PIL import Image
 from io import BytesIO
+import random
+import asyncio
 
 class Picture:
     def __init__(self, url):
@@ -14,6 +16,7 @@ class Picture:
         self.data = Image.open(BytesIO(bytes_))
 
     async def load(self, session, cnc=None):
+        await asyncio.sleep(random.randint(0, 60))
         async with session.get(self.url) as resp:
             if resp.status == 200:
                 try: #
