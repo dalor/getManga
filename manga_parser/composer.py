@@ -24,6 +24,7 @@ class Composer:
         async def load_pictures_(pictures):
             async with aiohttp.ClientSession() as session:
                 for pic in pictures:
+                    print(pic.url)
                     await pic.load(session, cnc)
         while True:
             pics_to_load = [pic for pic in pics if not pic.loaded]
