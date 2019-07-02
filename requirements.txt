@@ -1,5 +1,5 @@
 aiohttp
-requests
 lxml
 img2pdf
 Pillow
+telethon

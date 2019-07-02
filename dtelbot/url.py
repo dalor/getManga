@@ -18,12 +18,9 @@ class URL:
             async with session.get('https://api.telegram.org/bot{}/{}'.format(self.token, self.method), params=self.params, proxy=self.proxy) as response:
                 return await response.json()
     
-    async def asend(self):
+    async def send(self):
         try:
             async with aiohttp.ClientSession() as session:
                 return await self.fetch(session)
         except:
             return None
-
-    def send(self):
-        return asyncio.new_event_loop().run_until_complete(self.asend())

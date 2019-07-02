@@ -1,4 +1,5 @@
 from threading import Thread
+import asyncio
 
 class Checker(Thread):
   def __init__(self, bot, result):
@@ -7,12 +8,17 @@ class Checker(Thread):
     self.result = result
     self.oop = bot.oop
   
-  def get_by_path(self, dict, path):
+  def get_by_path(self, dict_, path):
     for p in path:
-      if not dict:
-        break
-      dict = dict.get(p)
-    return dict
+      if not dict_:
+        return
+      if type(dict_) == dict:
+        dict_ = dict_.get(p)
+      elif type(dict_) == list and type(p) == int:
+        dict_ = dict_[p]
+      else:
+        return
+    return dict_
   
   def run(self):
     for mess_type, mess in self.result.items():
@@ -30,9 +36,10 @@ class Checker(Thread):
             if match:
               _a_ = command['return'](mess_type, mess, match, self.bot)
               if self.oop:
-                command['run'](self, _a_)
+                coro = command['run'](self, _a_)
               else:
-                command['run'](_a_)
+                coro = command['run'](_a_)
+              asyncio.new_event_loop().run_until_complete(coro)
               user_session = _a_._session
               if user_session:
                 user_session.update_in_db()

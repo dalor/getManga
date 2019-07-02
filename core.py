@@ -1,54 +1,36 @@
 from dtelbot import Bot
-from dtelbot.inline_keyboard import markup, button
-from mangalib_parser import MangaLibBook, load_chapter
-from composer import Composer
+from manga_parser import MangaParser
+import os
 
-b = Bot('880652592:AAFxVMgpTunbkSWqGe66OiBVigDISOZHJIk')
+BOT_TOKEN = os.environ['BOT_TOKEN']
 
-composer = Composer()
+API_ID = os.environ['API_ID']
+API_HASH = os.environ['API_HASH']
+TELETHON_SESSION = os.environ['TELETHON_SESSION']
 
-class StatusMessage:
-    def __init__(self, a, text='', **kwargs):
-        self.a = a
-        self.text = text
-        self.chat_id = a.data['message']['chat']['id']
-        self.message_id = a.data['message']['message_id']
-        #self.a.bot.editreplymarkup(chat_id=self.chat_id, message_id=self.message_id).send()
+telethon_params = (TELETHON_SESSION, API_ID, API_HASH)
 
-    async def edit_text(self, text):
-        await self.a.bot.editcaption(text, self.chat_id, self.message_id, parse_mode='HTML').asend()
+b = Bot(BOT_TOKEN)
 
-    async def next(self, text):
-        print(text)
-        await self.edit_text(self.text + '\n' + text)
+mp = MangaParser(b, telethon_params)
 
 @b.message('/start')
-def start(a):
-    a.msg('Hello').send()
+async def start(a):
+    await a.msg('Hello').send()
 
 @b.message('.+/mangalib.me/([^/]+)')
-def mangalib(a):
-    book = MangaLibBook(a.args[1])
-    if book.loaded:
-        info = book.info
-        a.photo(book.thumbnail, caption='<b>{}\n{}[{}]</b>\n{}\nChapters: <code>{}</code>'.format(info['name'], info['rus_name'], book.lang, info['summary'].replace('<br>', ''), len(book.chapters)), parse_mode='HTML', reply_markup=markup([[button('Download', callback_data='d mangalib {}'.format(a.args[1]))]])).send()
+async def mangalib(a):
+    await mp.send_mangalib(a.chat_id, a.args[1])
 
 @b.callback_query('d mangalib (.+)')
-def download_mangalib(a):
-    book = MangaLibBook(a.args[1])
-    if book.loaded:
-        msg = StatusMessage(a, '<b>{}</b>\n<i>Loading...</i>'.format(book.info['name']))
-        chapter_count = len(book.chapters)
-        async def status_chapters(num):
-            await msg.next('Chapters loaded: {}/{}'.format(chapter_count - num, chapter_count))
-        pictures = book.load(status_chapters)
-        pic_count = len(pictures)
-        async def status_pictures(num):
-            await msg.next('Pictures loaded: {}/{}'.format(num, pic_count))
-        pdf_file = composer.urls2pdf(pictures, status_pictures)
-        ### sending
+async def download_mangalib(a):
+    await mp.load_all_chapters_from_mangalib(a.data['message'], a.args[1])
 
-
+@b.message(True, path=['document'])
+async def document(a):
+    token = a.data.get('caption')
+    if token:
+        await mp.send_file_by_token(a.data['document']['file_id'], token)
 
 if __name__ == '__main__':
     b.polling()
