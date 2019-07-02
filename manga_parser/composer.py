@@ -14,7 +14,7 @@ class CounterWithCallback:
             await self.callback(self.i)
 
 class Composer:
-    def __init__(self, max_width=1024, delta_count=20, pack_size=10):
+    def __init__(self, max_width=1024, delta_count=10, pack_size=300):
         self.max_width = max_width
         self.delta_count = delta_count
         self.pack_size = pack_size

@@ -14,7 +14,6 @@ class Picture:
         self.data = Image.open(BytesIO(bytes_))
 
     async def load(self, session, cnc=None):
-        print(self.url)
         async with session.get(self.url) as resp:
             if resp.status == 200:
                 try: #
