@@ -4,6 +4,7 @@ import os.path
 import os
 from threading import Thread
 import urllib3
+from time import sleep
 
 urllib3.disable_warnings()
 
@@ -32,12 +33,16 @@ class Picture(Thread):
         return img
 
     def run(self):
-        resp = http.request('GET', self.url, preload_content=False)
-        if resp.status == 200:
-            self.optimize(Image.open(resp)).convert('RGB').save(self.filepath, 'JPEG')
-            self.loaded = True
-            if self.cnc:
-                self.cnc.plus()
-        else:
-            print(resp.status, self.url)
-        resp.release_conn()
+        repeats = 0
+        while True:
+            resp = http.request('GET', self.url, preload_content=False)
+            if resp.status == 200:
+                self.optimize(Image.open(resp)).convert('RGB').save(self.filepath, 'JPEG')
+                self.loaded = True
+                if self.cnc:
+                    self.cnc.plus()
+            else:
+                print(resp.status, 'Repeats:', repeats, self.url)
+                repeats += 1
+            resp.release_conn()
+            sleep(1)
