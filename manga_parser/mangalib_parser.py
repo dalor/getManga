@@ -6,12 +6,20 @@ import json
 from base64 import b64decode
 from .picture import Picture
 import os
+import os.path
 
 find_window_info = re.compile(r'window\.\_\_info\ \=\ ([^;]+)[\S\s]+class\=\"pp\"\>\<\!\-\-\ *([^ ]+)')
 chapter_volume_with_id = re.compile(r'\/v([^\/]+)\/c([^\/]+)')
 img_server = {'main':'img2','secondary':'img2','compress':'img3'} # Was loaded from https://mangalib.me/js/main.js as '{key:"server",get:function(){return{main:"img2",secondary:"img2",compress:"img3"}'
 
-pictures_path = 'mangalib/pictures'
+mangalib = 'mangalib'
+
+try:
+    os.mkdir(mangalib)
+except:
+    print('Mangalib folder is already exists')
+
+pictures_path = os.path.join(mangalib, 'pictures')
 
 try:
     os.mkdir(pictures_path)

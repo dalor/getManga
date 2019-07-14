@@ -26,7 +26,7 @@ class Downloader(Thread):
         Thread.__init__(self)
         self.loading = []
         self.queue = Queue()
-        self.max = 8
+        self.max = 5
 
     def add(self, list_):
         self.queue.add(list_.copy())
