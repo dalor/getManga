@@ -41,8 +41,9 @@ class Picture(Thread):
                 self.loaded = True
                 if self.cnc:
                     self.cnc.plus()
+                break
             else:
                 print(resp.status, 'Repeats:', repeats, self.url)
                 repeats += 1
             resp.release_conn()
-            sleep(1)
+            sleep(3)
