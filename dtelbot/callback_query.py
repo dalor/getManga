@@ -7,6 +7,14 @@ class CallbackQuery:
         self._session = None
 
     @property
+    def chat_id(self):
+        return self.data['message']['chat']['id']
+
+    @property
+    def message_id(self):
+        return self.data['message']['message_id']
+
+    @property
     def session(self):
         if not self._session:
             self._session = self.bot.get_session(self)

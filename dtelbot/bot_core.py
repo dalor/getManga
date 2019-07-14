@@ -63,6 +63,9 @@ class BotCore(Methods):
     
   def getwebhookinfo(self):
     return self.method('getWebhookInfo')
+
+  def getme(self):
+    return self.method('getMe')
   
   def register(self, types, function, text, path):
     for type_ in types:
@@ -74,11 +77,9 @@ class BotCore(Methods):
           'return': self.return_types[type_]
         })
   
-  def more(self, urls):
-    async def get():
-      async with aiohttp.ClientSession() as session:
-        return await asyncio.gather(*[asyncio.ensure_future(url.fetch(session)) for url in urls])
-    return asyncio.new_event_loop().run_until_complete(get())
+  async def more(self, urls):
+    async with aiohttp.ClientSession() as session:
+      return await asyncio.gather(*[asyncio.ensure_future(url.fetch(session)) for url in urls])
 
   def check(self, message):
     Checker(self, message).start()
@@ -87,6 +88,7 @@ class BotCore(Methods):
     async def poll():
       offset = 0
       async with aiohttp.ClientSession() as session:
+        await self.deletewebhook().send()
         while True:
           response = await self.method('getUpdates', offset=offset).fetch(session)
           if response['ok']:

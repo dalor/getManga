@@ -1,34 +1,43 @@
 from PIL import Image
 from io import BytesIO
+import os.path
+import os
+from threading import Thread
+import urllib3
 
-class Picture:
-    def __init__(self, url):
+urllib3.disable_warnings()
+
+http = urllib3.PoolManager()
+
+class Picture(Thread):
+    def __init__(self, url, filepath, base_dir=''):
+        Thread.__init__(self)
         self.url = url
-        self.data = None
+        self.loaded = False
+        self.cnc = None
+        self.filepath = os.path.join(base_dir, filepath)
+        self.change_filename_extension()
 
-    @property
-    def loaded(self):
-        return True if self.data else False
+    def change_filename_extension(self):
+        ext = self.filepath.split('.')[-1]
+        self.filepath = self.filepath.replace('.' + ext, '.jpg')
 
-    def to_PIL(self, bytes_):
-        self.data = Image.open(BytesIO(bytes_))
+    def download(self, cnc=None):
+        if cnc:
+            self.cnc = cnc
+        self.start()
 
-    async def load(self, session, cnc=None):
-        async with session.get(self.url) as resp:
-            if resp.status == 200:
-                try: #
-                    self.to_PIL(await resp.read())
-                    if cnc:
-                        await cnc.plus()
-                except: #
-                    pass #
-            else:
-                print('Error: {}: {}'.format(resp.status, self.url))
-            return self
-    
-    def to_bytes(self):
-        if self.data:
-            buffer = BytesIO()
-            self.data = self.data.convert('RGB')
-            self.data.save(buffer, format='JPEG')
-            return buffer.getvalue()
+    def optimize(self, img):
+        ### Optimize size
+        return img
+
+    def run(self):
+        resp = http.request('GET', self.url, preload_content=False)
+        if resp.status == 200:
+            self.optimize(Image.open(resp)).convert('RGB').save(self.filepath, 'JPEG')
+            self.loaded = True
+            if self.cnc:
+                self.cnc.plus()
+        else:
+            print(resp.status, self.url)
+        resp.release_conn()
